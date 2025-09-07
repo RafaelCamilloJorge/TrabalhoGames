@@ -65,15 +65,20 @@ public class BallController : MonoBehaviour
             Vector3 capped = planar.normalized * maxSpeed;
             rb.linearVelocity = new Vector3(capped.x, vel.y, capped.z);
         }
+    }
 
-        if(rb.position.y < -10f)
+
+    void OnCollisionEnter(Collision collision)
+    {
+        var other = collision.collider;
+        if (other.CompareTag("ChaoPrincipal"))
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.position = respawnPosition;
 
             CollectibleStar.ResetAll();
-            ScoreService.Reset();
+            ScoreService.Reset();            
         }
     }
 
