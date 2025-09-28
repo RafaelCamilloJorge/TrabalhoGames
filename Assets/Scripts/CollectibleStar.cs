@@ -44,7 +44,6 @@ public class CollectibleStar : MonoBehaviour
 
         ScoreService.Add(value);
 
-        // Em vez de destruir, desativa para permitir reset posterior
         gameObject.SetActive(false);
     }
 
