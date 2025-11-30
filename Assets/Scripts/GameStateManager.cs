@@ -134,7 +134,7 @@ public class GameStateManager : MonoBehaviour
     {
         if (_gameEnded) return;
 
-        int targetScore = CollectibleStar.TotalPossibleScore;
+        int targetScore = 2;
         if (targetScore <= 0) return;
 
         if (score >= targetScore)
