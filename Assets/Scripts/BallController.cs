@@ -28,18 +28,29 @@ public class BallController : MonoBehaviour
 
     void Update()
     {
+        if (GameStateManager.Instance != null && GameStateManager.Instance.GameEnded)
+            return;
+
         if (Input.GetKeyDown(KeyCode.R))
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.position = respawnPosition;
-            CollectibleStar.ResetAll();
-            ScoreService.Reset();
+            if (GameStateManager.Instance != null)
+                GameStateManager.Instance.ManualReset(respawnPosition, rb);
+            else
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.position = respawnPosition;
+                CollectibleStar.ResetAll();
+                ScoreService.Reset();
+            }
         }
     }
 
     void FixedUpdate()
     {
+        if (GameStateManager.Instance != null && GameStateManager.Instance.GameEnded)
+            return;
+
         // Input (Input Manager)
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
@@ -67,12 +78,17 @@ public class BallController : MonoBehaviour
         var other = collision.collider;
         if (other.CompareTag("ChaoPrincipal"))
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.position = respawnPosition;
+            if (GameStateManager.Instance != null)
+                GameStateManager.Instance.HandlePlayerFall(respawnPosition, rb);
+            else
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.position = respawnPosition;
 
-            CollectibleStar.ResetAll();
-            ScoreService.Reset();            
+                CollectibleStar.ResetAll();
+                ScoreService.Reset();
+            }
         }
     }
 
