@@ -56,4 +56,19 @@ public class CollectibleStar : MonoBehaviour
                 star.gameObject.SetActive(true);
         }
     }
+
+    public static int TotalPossibleScore
+    {
+        get
+        {
+            int total = 0;
+            for (int i = 0; i < Registry.Count; i++)
+            {
+                var star = Registry[i];
+                if (star != null)
+                    total += star.value;
+            }
+            return total;
+        }
+    }
 }
