@@ -18,13 +18,31 @@ public class GameStateManager : MonoBehaviour
     [SerializeField] TMP_Text finalScoreText;
     [SerializeField] string fallbackWinScene = "Win";
     [SerializeField] string fallbackLoseScene = "GameOver";
+    [SerializeField] string endGameScene = "EndGame";
 
     int _lives;
     bool _gameEnded;
+    bool _lastResultWasWin;
+    int _lastResultScore;
 
     public bool GameEnded => _gameEnded;
     public int Lives => _lives;
     public int MaxLives => maxLives;
+    public bool LastResultWasWin => _lastResultWasWin;
+    public int LastResultScore => _lastResultScore;
+
+    public void ResetStateForRestart()
+    {
+        _gameEnded = false;
+        maxLives = Mathf.Max(1, maxLives);
+        _lives = maxLives;
+        _lastResultWasWin = false;
+        _lastResultScore = 0;
+        NotifyLivesChanged();
+        ScoreService.Reset();
+        CollectibleStar.ResetAll();
+        Debug.Log("[GameStateManager] ResetStateForRestart - lives and score reset");
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void EnsureExists()
@@ -94,6 +112,7 @@ public class GameStateManager : MonoBehaviour
         if (_lives <= 0) return;
 
         _lives = Mathf.Max(0, _lives - 1);
+        Debug.Log($"[GameStateManager] LoseLife -> lives now {_lives}/{maxLives}");
         NotifyLivesChanged();
 
         if (resetStarsOnDeath)
@@ -125,13 +144,20 @@ public class GameStateManager : MonoBehaviour
     void EndGame(bool won)
     {
         _gameEnded = true;
+        Debug.Log($"[GameStateManager] EndGame triggered - won:{won} score:{ScoreService.Score}");
         ShowEndScreen(won);
     }
 
     void ShowEndScreen(bool won)
     {
+        _lastResultWasWin = won;
+        _lastResultScore = ScoreService.Score;
+        PlayerPrefs.SetInt("LastResultWasWin", _lastResultWasWin ? 1 : 0);
+        PlayerPrefs.SetInt("LastResultScore", _lastResultScore);
+        PlayerPrefs.Save();
+
         if (finalScoreText != null)
-            finalScoreText.text = $"Pontuação Final: {ScoreService.Score}";
+            finalScoreText.text = $"{ScoreService.Score}";
 
         if (won && winScreen != null)
         {
@@ -145,14 +171,16 @@ public class GameStateManager : MonoBehaviour
             return;
         }
 
-        string targetScene = won ? fallbackWinScene : fallbackLoseScene;
+        string targetScene = !string.IsNullOrEmpty(endGameScene) ? endGameScene : (won ? fallbackWinScene : fallbackLoseScene);
+        Debug.Log($"[GameStateManager] EndGame ({(won ? "WIN" : "LOSE")}) loading scene '{targetScene}'");
+
         if (!string.IsNullOrEmpty(targetScene) && Application.CanStreamedLevelBeLoaded(targetScene))
         {
             SceneManager.LoadScene(targetScene);
         }
         else
         {
-            Debug.Log($"{(won ? "Vitória" : "Derrota")} - Cena '{targetScene}' não encontrada.");
+            Debug.LogError($"{(won ? "Vitória" : "Derrota")} - Cena '{targetScene}' não encontrada ou não está no Build Settings.");
         }
     }
 
